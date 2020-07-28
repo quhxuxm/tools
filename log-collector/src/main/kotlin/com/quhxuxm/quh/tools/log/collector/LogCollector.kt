@@ -40,7 +40,7 @@ object LogCollector {
                 val downloadPath = Path.of(TMP_FOLDER, randomFileName)
                 Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
                 val resultFilePath = Path.of(targetPath)
-                println("Begin to unzip to file: ${targetPath}")
+                println("Begin to unzip downloaded file: ${downloadPath}")
                 callbackExecutor.submit {
                     this.unzip(downloadPath, resultFilePath, callback)
                 }

@@ -52,8 +52,8 @@ object LogCollector {
             targetFolderPath.toFile().mkdirs()
         }
         this.collect(
-                "$LOG_SERVER_BASE_URL/${dataCenter.id}/$component/${dataCenter.shortName}prod/" +
-                        "${dataCenter.shortName}-$component-app0${appIndex}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",
+                "$LOG_SERVER_BASE_URL/${dataCenter.id}/${component.id}/${dataCenter.shortName}prod/" +
+                        "${dataCenter.shortName}-${component.id}-app0${appIndex}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",
                 Path.of(targetFolderPath.toString(), "${component.appLogFileName}.${dataSuffix}.app0${appIndex}.log")
                         .toString(),
                 callback)

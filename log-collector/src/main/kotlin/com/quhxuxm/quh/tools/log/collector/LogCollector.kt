@@ -13,7 +13,8 @@ import java.util.zip.GZIPInputStream
 object LogCollector {
     private const val TMP_FOLDER = "./tmp"
     private const val LOG_SERVER_BASE_URL = "http://sf-prod-arch01.corp.wagerworks.com/archives"
-    private val executor = Executors.newFixedThreadPool(20)
+    private val collectFileIoExecutor = Executors.newFixedThreadPool(20)
+    private val callbackExecutor = Executors.newFixedThreadPool(20)
 
     init {
         val tmpFolderPath = Path.of(TMP_FOLDER)
@@ -29,7 +30,7 @@ object LogCollector {
     }
 
     fun collect(logPath: String, targetPath: String, callback: (resultFilePath: Path) -> Unit) {
-        executor.submit() {
+        collectFileIoExecutor.submit {
             try {
                 println("Downloading file: ${logPath}")
                 val remoteLogUrl = URL(logPath)
@@ -39,7 +40,9 @@ object LogCollector {
                 val resultFilePath = Path.of(targetPath)
                 println("Unzip to file: ${targetPath}")
                 this.unzip(downloadPath, resultFilePath)
-                callback(resultFilePath)
+                callbackExecutor.submit {
+                    callback(resultFilePath)
+                }
             } catch (e: Exception) {
                 println("Fail to collect file: ${logPath} because of exception.")
                 e.printStackTrace()
@@ -47,7 +50,7 @@ object LogCollector {
         }
     }
 
-    fun collectComponentLog(dataCenter: DataCenter, component: Component, appIndex: Int,
+    fun collectComponentLog(dataCenter: DataCenter, component: Component,
                             stack: AppStack = AppStack.A, date: Date, targetBaseFolderPath: String,
                             callback: (resultFilePath: Path) -> Unit) {
         val dataFormat = SimpleDateFormat("yyyy-MM-dd")
@@ -56,13 +59,15 @@ object LogCollector {
         if (!targetFolderPath.toFile().exists()) {
             targetFolderPath.toFile().mkdirs()
         }
-        collect(
-                "$LOG_SERVER_BASE_URL/${dataCenter.id}/${component.id}/${dataCenter.shortName}prod/" +
-                        "${dataCenter.shortName}-${component.id}-app0${appIndex}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",
-                Path.of(targetFolderPath.toString(),
-                        "${component.appLogFileName}.${dataSuffix}.app0${appIndex}.log")
-                        .toString(),
-                callback)
+        (1..4).forEach {
+            collect(
+                    "$LOG_SERVER_BASE_URL/${dataCenter.id}/${component.id}/${dataCenter.shortName}prod/" +
+                            "${dataCenter.shortName}-${component.id}-app0${it}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",
+                    Path.of(targetFolderPath.toString(),
+                            "${component.appLogFileName}.${dataSuffix}.app0${it}.log")
+                            .toString(),
+                    callback)
+        }
     }
 }
 
@@ -76,37 +81,28 @@ fun main() {
     val date2 = calendar.time
     val dateToDownload = listOf(date1, date2)
     dateToDownload.forEach { date ->
-        (1..4).forEach {
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.RGS_PLATFORM,
-                    appIndex = it,
-                    date = date,
-                    targetBaseFolderPath = targetBaseFolderPath
-            ) {
-            }
+        LogCollector.collectComponentLog(
+                dataCenter = dataCenter,
+                component = Component.RGS_PLATFORM,
+                date = date,
+                targetBaseFolderPath = targetBaseFolderPath
+        ) {
         }
-        (1..4).forEach {
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.GSR,
-                    appIndex = it,
-                    date = date,
-                    stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath
-            ) {
-            }
+        LogCollector.collectComponentLog(
+                dataCenter = dataCenter,
+                component = Component.GSR,
+                date = date,
+                stack = AppStack.NONE,
+                targetBaseFolderPath = targetBaseFolderPath
+        ) {
         }
-        (1..4).forEach {
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.PAS,
-                    appIndex = it,
-                    date = date,
-                    stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath
-            ) {
-            }
+        LogCollector.collectComponentLog(
+                dataCenter = dataCenter,
+                component = Component.PAS,
+                date = date,
+                stack = AppStack.NONE,
+                targetBaseFolderPath = targetBaseFolderPath
+        ) {
         }
     }
 }

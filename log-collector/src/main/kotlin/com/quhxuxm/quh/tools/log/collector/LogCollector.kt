@@ -16,7 +16,7 @@ object LogCollector {
     init {
         val tmpFolderPath = Path.of(TMP_FOLDER)
         if (!tmpFolderPath.toFile().exists()) {
-            tmpFolderPath.toFile().mkdir()
+            tmpFolderPath.toFile().mkdirs()
         }
     }
 

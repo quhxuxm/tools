@@ -27,6 +27,7 @@ object LogCollector {
         val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
         Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
         gzipFileInputStream.close()
+        println("Success to unzip to file: ${outputFilePath.toAbsolutePath()}")
         callback(outputFilePath)
     }
 
@@ -39,7 +40,7 @@ object LogCollector {
                 val downloadPath = Path.of(TMP_FOLDER, randomFileName)
                 Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
                 val resultFilePath = Path.of(targetPath)
-                println("Unzip to file: ${targetPath}")
+                println("Begin to unzip to file: ${targetPath}")
                 callbackExecutor.submit {
                     this.unzip(downloadPath, resultFilePath, callback)
                 }

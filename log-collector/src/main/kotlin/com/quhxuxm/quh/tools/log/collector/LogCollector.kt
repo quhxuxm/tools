@@ -27,7 +27,7 @@ object LogCollector {
         val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
         Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
         gzipFileInputStream.close()
-        println("Success to unzip to file: ${outputFilePath.toAbsolutePath()}")
+        println("Success to unzip: ${zipFilePath.toAbsolutePath()} to file: ${outputFilePath.toAbsolutePath()}")
         callback(outputFilePath)
     }
 

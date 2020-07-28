@@ -42,19 +42,20 @@ object LogCollector {
         }
     }
 
-    fun collectComponentLog(dataCenter: DataCenter, component: String, appIndex: Int,
-                            stack: AppStack = AppStack.A, logFileName: String, date: Date, targetBaseFolderPath: String,
+    fun collectComponentLog(dataCenter: DataCenter, component: Component, appIndex: Int,
+                            stack: AppStack = AppStack.A, date: Date, targetBaseFolderPath: String,
                             callback: (resultFilePath: Path) -> Unit) {
         val dataFormat = SimpleDateFormat("yyyy-MM-dd")
         val dataSuffix = dataFormat.format(date)
-        val targetFolderPath = Path.of(targetBaseFolderPath, dataCenter.id, component)
+        val targetFolderPath = Path.of(targetBaseFolderPath, dataCenter.id, component.id)
         if (!targetFolderPath.toFile().exists()) {
             targetFolderPath.toFile().mkdirs()
         }
         this.collect(
                 "$LOG_SERVER_BASE_URL/${dataCenter.id}/$component/${dataCenter.shortName}prod/" +
-                        "${dataCenter.shortName}-$component-app0${appIndex}${stack.id}/${logFileName}.${dataSuffix}.gz",
-                Path.of(targetFolderPath.toString(), "${logFileName}.${dataSuffix}.app0${appIndex}.log").toString(),
+                        "${dataCenter.shortName}-$component-app0${appIndex}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",
+                Path.of(targetFolderPath.toString(), "${component.appLogFileName}.${dataSuffix}.app0${appIndex}.log")
+                        .toString(),
                 callback)
     }
 }
@@ -70,29 +71,35 @@ fun main() {
     val dateToDownload = listOf(date1, date2)
     dateToDownload.forEach { date ->
         (1..4).forEach {
-            val component = "rgs"
-            val logFileName = "platform.log"
-            LogCollector.collectComponentLog(dataCenter = dataCenter, component = component,
-                    appIndex = it, logFileName = logFileName, date = date,
-                    targetBaseFolderPath = targetBaseFolderPath) {
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.RGS_PLATFORM,
+                    appIndex = it,
+                    date = date,
+                    targetBaseFolderPath = targetBaseFolderPath
+            ) {
             }
         }
         (1..4).forEach {
-            val component = "gsr"
-            val logFileName = "gsr.log"
-            LogCollector.collectComponentLog(dataCenter = dataCenter, component = component,
-                    appIndex = it, logFileName = logFileName, date = date,
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.GSR,
+                    appIndex = it,
+                    date = date,
                     stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath) {
+                    targetBaseFolderPath = targetBaseFolderPath
+            ) {
             }
         }
         (1..4).forEach {
-            val component = "pas"
-            val logFileName = "pas.log"
-            LogCollector.collectComponentLog(dataCenter = dataCenter, component = component,
-                    appIndex = it, logFileName = logFileName, date = date,
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.PAS,
+                    appIndex = it,
+                    date = date,
                     stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath) {
+                    targetBaseFolderPath = targetBaseFolderPath
+            ) {
             }
         }
     }

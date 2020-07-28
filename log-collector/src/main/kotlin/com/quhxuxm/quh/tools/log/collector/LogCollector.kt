@@ -23,10 +23,11 @@ object LogCollector {
         }
     }
 
-    private fun unzip(zipFilePath: Path, outputFilePath: Path) {
+    private fun unzip(zipFilePath: Path, outputFilePath: Path, callback: (resultFilePath: Path) -> Unit) {
         val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
         Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
         gzipFileInputStream.close()
+        callback(outputFilePath)
     }
 
     fun collect(logPath: String, targetPath: String, callback: (resultFilePath: Path) -> Unit) {
@@ -39,9 +40,8 @@ object LogCollector {
                 Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
                 val resultFilePath = Path.of(targetPath)
                 println("Unzip to file: ${targetPath}")
-                this.unzip(downloadPath, resultFilePath)
                 callbackExecutor.submit {
-                    callback(resultFilePath)
+                    this.unzip(downloadPath, resultFilePath, callback)
                 }
             } catch (e: Exception) {
                 println("Fail to collect file: ${logPath} because of exception.")
@@ -52,6 +52,7 @@ object LogCollector {
 
     fun collectComponentLog(dataCenter: DataCenter, component: Component,
                             stack: AppStack = AppStack.A, date: Date, targetBaseFolderPath: String,
+                            indexRange: IntRange = 1..4,
                             callback: (resultFilePath: Path) -> Unit) {
         val dataFormat = SimpleDateFormat("yyyy-MM-dd")
         val dataSuffix = dataFormat.format(date)
@@ -59,7 +60,7 @@ object LogCollector {
         if (!targetFolderPath.toFile().exists()) {
             targetFolderPath.toFile().mkdirs()
         }
-        (1..4).forEach {
+        indexRange.forEach {
             collect(
                     "$LOG_SERVER_BASE_URL/${dataCenter.id}/${component.id}/${dataCenter.shortName}prod/" +
                             "${dataCenter.shortName}-${component.id}-app0${it}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",

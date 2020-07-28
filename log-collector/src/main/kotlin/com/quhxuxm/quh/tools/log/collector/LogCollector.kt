@@ -7,11 +7,13 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.Executors
 import java.util.zip.GZIPInputStream
 
 object LogCollector {
     private const val TMP_FOLDER = "./tmp"
     private const val LOG_SERVER_BASE_URL = "http://sf-prod-arch01.corp.wagerworks.com/archives"
+    private val executor = Executors.newFixedThreadPool(20)
 
     init {
         val tmpFolderPath = Path.of(TMP_FOLDER)
@@ -27,19 +29,21 @@ object LogCollector {
     }
 
     fun collect(logPath: String, targetPath: String, callback: (resultFilePath: Path) -> Unit) {
-        try {
-            println("Downloading file: ${logPath}")
-            val remoteLogUrl = URL(logPath)
-            val randomFileName = UUID.randomUUID().toString().replace("-", "")
-            val downloadPath = Path.of(TMP_FOLDER, randomFileName)
-            Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
-            val resultFilePath = Path.of(targetPath)
-            println("Unzip to file: ${targetPath}")
-            this.unzip(downloadPath, resultFilePath)
-            callback(resultFilePath)
-        } catch (e: Exception) {
-            println("Fail to collect file: ${logPath} because of exception.")
-            e.printStackTrace()
+        executor.submit() {
+            try {
+                println("Downloading file: ${logPath}")
+                val remoteLogUrl = URL(logPath)
+                val randomFileName = UUID.randomUUID().toString().replace("-", "")
+                val downloadPath = Path.of(TMP_FOLDER, randomFileName)
+                Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
+                val resultFilePath = Path.of(targetPath)
+                println("Unzip to file: ${targetPath}")
+                this.unzip(downloadPath, resultFilePath)
+                callback(resultFilePath)
+            } catch (e: Exception) {
+                println("Fail to collect file: ${logPath} because of exception.")
+                e.printStackTrace()
+            }
         }
     }
 
@@ -52,10 +56,11 @@ object LogCollector {
         if (!targetFolderPath.toFile().exists()) {
             targetFolderPath.toFile().mkdirs()
         }
-        this.collect(
+        collect(
                 "$LOG_SERVER_BASE_URL/${dataCenter.id}/${component.id}/${dataCenter.shortName}prod/" +
                         "${dataCenter.shortName}-${component.id}-app0${appIndex}${stack.id}/${component.appLogFileName}.${dataSuffix}.gz",
-                Path.of(targetFolderPath.toString(), "${component.appLogFileName}.${dataSuffix}.app0${appIndex}.log")
+                Path.of(targetFolderPath.toString(),
+                        "${component.appLogFileName}.${dataSuffix}.app0${appIndex}.log")
                         .toString(),
                 callback)
     }

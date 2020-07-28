@@ -23,6 +23,7 @@ object LogCollector {
     private fun unzip(zipFilePath: Path, outputFilePath: Path) {
         val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
         Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
+        gzipFileInputStream.close()
     }
 
     fun collect(logPath: String, targetPath: String, callback: (resultFilePath: Path) -> Unit) {

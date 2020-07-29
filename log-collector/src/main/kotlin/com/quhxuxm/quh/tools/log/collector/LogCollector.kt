@@ -88,13 +88,13 @@ fun main() {
     val date1 = calendar.time
     calendar.set(2020, Calendar.JULY, 27)
     val date2 = calendar.time
-    calendar.set(2020, Calendar.JULY, 25)
-    val date3 = calendar.time
-    calendar.set(2020, Calendar.JULY, 24)
-    val date4 = calendar.time
-    calendar.set(2020, Calendar.JULY, 23)
-    val date5 = calendar.time
-    val dateToDownload = listOf(date1, date2, date3, date4, date5)
+//    calendar.set(2020, Calendar.JULY, 25)
+//    val date3 = calendar.time
+//    calendar.set(2020, Calendar.JULY, 24)
+//    val date4 = calendar.time
+//    calendar.set(2020, Calendar.JULY, 23)
+//    val date5 = calendar.time
+    val dateToDownload = listOf(date1, date2)
     dateToDownload.forEach { date ->
         LogCollector.collectComponentLog(
                 dataCenter = dataCenter,
@@ -116,6 +116,15 @@ fun main() {
         LogCollector.collectComponentLog(
                 dataCenter = dataCenter,
                 component = Component.PAS,
+                date = date,
+                stack = AppStack.NONE,
+                targetBaseFolderPath = targetBaseFolderPath
+        ) {
+            println("Ready to analyze: ${it.toAbsolutePath()} ")
+        }
+        LogCollector.collectComponentLog(
+                dataCenter = dataCenter,
+                component = Component.TS,
                 date = date,
                 stack = AppStack.NONE,
                 targetBaseFolderPath = targetBaseFolderPath

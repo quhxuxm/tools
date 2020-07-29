@@ -7,14 +7,11 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.Executors
 import java.util.zip.GZIPInputStream
 
 object LogCollector {
     private const val TMP_FOLDER = "./tmp"
     private const val LOG_SERVER_BASE_URL = "http://sf-prod-arch01.corp.wagerworks.com/archives"
-    private val collectFileIoExecutor = Executors.newFixedThreadPool(20)
-    private val callbackExecutor = Executors.newFixedThreadPool(20)
 
     init {
         val tmpFolderPath = Path.of(TMP_FOLDER)
@@ -32,7 +29,7 @@ object LogCollector {
     }
 
     fun collect(logPath: String, targetPath: String, callback: (resultFilePath: Path) -> Unit) {
-        collectFileIoExecutor.submit {
+        Thread {
             try {
                 println("Downloading file: ${logPath}")
                 val remoteLogUrl = URL(logPath)
@@ -41,14 +38,24 @@ object LogCollector {
                 Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
                 val resultFilePath = Path.of(targetPath)
                 println("Begin to unzip downloaded file: ${downloadPath}")
-                callbackExecutor.submit {
-                    this.unzip(downloadPath, resultFilePath, callback)
-                }
+                Thread {
+                    try {
+                        this.unzip(downloadPath, resultFilePath) {
+                            Files.delete(downloadPath)
+                            Thread {
+                                callback(resultFilePath)
+                            }.start()
+                        }
+                    } catch (e: Exception) {
+                        println("Fail to unzip file: ${logPath} because of exception.")
+                        e.printStackTrace()
+                    }
+                }.start()
             } catch (e: Exception) {
                 println("Fail to collect file: ${logPath} because of exception.")
                 e.printStackTrace()
             }
-        }
+        }.start()
     }
 
     fun collectComponentLog(dataCenter: DataCenter, component: Component,
@@ -81,7 +88,13 @@ fun main() {
     val date1 = calendar.time
     calendar.set(2020, Calendar.JULY, 27)
     val date2 = calendar.time
-    val dateToDownload = listOf(date1, date2)
+    calendar.set(2020, Calendar.JULY, 25)
+    val date3 = calendar.time
+    calendar.set(2020, Calendar.JULY, 24)
+    val date4 = calendar.time
+    calendar.set(2020, Calendar.JULY, 23)
+    val date5 = calendar.time
+    val dateToDownload = listOf(date1, date2, date3, date4, date5)
     dateToDownload.forEach { date ->
         LogCollector.collectComponentLog(
                 dataCenter = dataCenter,
@@ -89,6 +102,7 @@ fun main() {
                 date = date,
                 targetBaseFolderPath = targetBaseFolderPath
         ) {
+            println("Ready to analyze: ${it.toAbsolutePath()} ")
         }
         LogCollector.collectComponentLog(
                 dataCenter = dataCenter,
@@ -97,6 +111,7 @@ fun main() {
                 stack = AppStack.NONE,
                 targetBaseFolderPath = targetBaseFolderPath
         ) {
+            println("Ready to analyze: ${it.toAbsolutePath()} ")
         }
         LogCollector.collectComponentLog(
                 dataCenter = dataCenter,
@@ -105,6 +120,7 @@ fun main() {
                 stack = AppStack.NONE,
                 targetBaseFolderPath = targetBaseFolderPath
         ) {
+            println("Ready to analyze: ${it.toAbsolutePath()} ")
         }
     }
 }

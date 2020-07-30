@@ -9,9 +9,9 @@
     <version>1.0-SNAPSHOT</version>
     <name>root</name>
     <modules>
-        <module>log-collector</module>
-        <module>log-analyzer</module>
-        <module>kafka-checker</module>
+        <module>kafka</module>
+        <module>entry</module>
+        <module>log</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

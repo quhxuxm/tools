@@ -8,9 +8,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <groupId>com.quhxuxm.quh.tools.kafka</groupId>
     <artifactId>kafka</artifactId>
     <packaging>pom</packaging>
-    <name>Kafka Tools</name>
+    <name>Tools - Kafka Tools Suit</name>
     <modules>
         <module>failover</module>
     </modules>

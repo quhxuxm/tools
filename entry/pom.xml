@@ -9,5 +9,17 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>entry</artifactId>
-    <name>Tools Entry</name>
+    <name>Tools - Entry</name>
+    <dependencies>
+        <dependency>
+            <groupId>com.quhxuxm.quh.tools.log</groupId>
+            <artifactId>collector</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.quhxuxm.quh.tools.kafka</groupId>
+            <artifactId>failover</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

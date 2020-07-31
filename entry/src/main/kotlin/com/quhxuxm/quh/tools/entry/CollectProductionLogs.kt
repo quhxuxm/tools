@@ -4,6 +4,7 @@ import com.quhxuxm.quh.tools.log.collector.AppStack
 import com.quhxuxm.quh.tools.log.collector.Component
 import com.quhxuxm.quh.tools.log.collector.DataCenter
 import com.quhxuxm.quh.tools.log.collector.LogCollector
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 fun main() {
@@ -21,41 +22,35 @@ fun main() {
 //    calendar.set(2020, Calendar.JULY, 23)
 //    val date5 = calendar.time
     val dateToDownload = listOf(date1, date2)
-    dateToDownload.forEach { date ->
-        LogCollector.collectComponentLog(
-                dataCenter = dataCenter,
-                component = Component.RGS_PLATFORM,
-                date = date,
-                targetBaseFolderPath = targetBaseFolderPath
-        ) {
-            println("Ready to analyze: ${it.toAbsolutePath()} ")
-        }
-        LogCollector.collectComponentLog(
-                dataCenter = dataCenter,
-                component = Component.GSR,
-                date = date,
-                stack = AppStack.NONE,
-                targetBaseFolderPath = targetBaseFolderPath
-        ) {
-            println("Ready to analyze: ${it.toAbsolutePath()} ")
-        }
-        LogCollector.collectComponentLog(
-                dataCenter = dataCenter,
-                component = Component.PAS,
-                date = date,
-                stack = AppStack.NONE,
-                targetBaseFolderPath = targetBaseFolderPath
-        ) {
-            println("Ready to analyze: ${it.toAbsolutePath()} ")
-        }
-        LogCollector.collectComponentLog(
-                dataCenter = dataCenter,
-                component = Component.TS,
-                date = date,
-                stack = AppStack.NONE,
-                targetBaseFolderPath = targetBaseFolderPath
-        ) {
-            println("Ready to analyze: ${it.toAbsolutePath()} ")
+    runBlocking {
+        dateToDownload.forEach { date ->
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.RGS_PLATFORM_TOMCAT,
+                    date = date,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.GSR,
+                    date = date,
+                    stack = AppStack.NONE,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.PAS,
+                    date = date,
+                    stack = AppStack.NONE,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+            LogCollector.collectComponentLog(
+                    dataCenter = dataCenter,
+                    component = Component.TS,
+                    date = date,
+                    stack = AppStack.NONE,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
         }
     }
 }

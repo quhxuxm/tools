@@ -1,6 +1,7 @@
 package com.quhxuxm.quh.tools.entry
 
 import com.quhxuxm.quh.tools.kafka.checker.KafkaData
+import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -10,7 +11,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-fun main() {
+fun main() = runBlocking<Unit>{
     val kafkaProducerProperties = Properties()
     kafkaProducerProperties.put("bootstrap.servers", "localhost:9081,localhost:9082,localhost:9083")
     kafkaProducerProperties.put("acks", "1")

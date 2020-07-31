@@ -8,6 +8,7 @@ import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.zip.GZIPInputStream
+import kotlin.concurrent.thread
 
 object LogCollector {
     private const val TMP_FOLDER = "./tmp"
@@ -29,7 +30,7 @@ object LogCollector {
     }
 
     fun collect(logPath: String, targetPath: String, callback: (resultFilePath: Path) -> Unit) {
-        Thread {
+        thread {
             try {
                 println("Downloading file: ${logPath}")
                 val remoteLogUrl = URL(logPath)
@@ -38,24 +39,24 @@ object LogCollector {
                 Files.copy(remoteLogUrl.openStream(), downloadPath, StandardCopyOption.REPLACE_EXISTING)
                 val resultFilePath = Path.of(targetPath)
                 println("Begin to unzip downloaded file: ${downloadPath}")
-                Thread {
+                thread {
                     try {
                         this.unzip(downloadPath, resultFilePath) {
                             Files.delete(downloadPath)
-                            Thread {
+                            thread {
                                 callback(resultFilePath)
-                            }.start()
+                            }
                         }
                     } catch (e: Exception) {
                         println("Fail to unzip file: ${logPath} because of exception.")
                         e.printStackTrace()
                     }
-                }.start()
+                }
             } catch (e: Exception) {
                 println("Fail to collect file: ${logPath} because of exception.")
                 e.printStackTrace()
             }
-        }.start()
+        }
     }
 
     fun collectComponentLog(dataCenter: DataCenter, component: Component,

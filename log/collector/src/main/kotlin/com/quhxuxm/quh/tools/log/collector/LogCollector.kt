@@ -3,7 +3,7 @@ package com.quhxuxm.quh.tools.log.collector
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.FileInputStream
 import java.io.IOException
 import java.net.URL
@@ -18,8 +18,8 @@ import java.util.zip.GZIPInputStream
 object LogCollector {
     private const val TMP_FOLDER = "./tmp"
     private const val LOG_SERVER_BASE_URL = "http://sf-prod-arch01.corp.wagerworks.com/archives"
-    private val collectLogFileContext = Executors.newFixedThreadPool(20).asCoroutineDispatcher()
-    private val unzipLogFileContext = Executors.newFixedThreadPool(20).asCoroutineDispatcher()
+    private val collectRemoteFileIoContext = Executors.newFixedThreadPool(20).asCoroutineDispatcher()
+    private val unzipLogFileIoContext = Executors.newFixedThreadPool(20).asCoroutineDispatcher()
 
     init {
         val tmpFolderPath = Path.of(TMP_FOLDER)
@@ -28,71 +28,64 @@ object LogCollector {
         }
     }
 
-    private suspend fun unzip(zipFilePath: Path, outputFilePath: Path) = coroutineScope {
-        launch {
-            async(unzipLogFileContext) {
-                println("Begin to unzip file: ${zipFilePath}")
-                val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
-                Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
-                gzipFileInputStream.close()
-                println("Success to unzip: ${zipFilePath.toAbsolutePath()} to file: ${outputFilePath.toAbsolutePath()}")
-            }
-        }
+    private suspend fun unzip(zipFilePath: Path, outputFilePath: Path) = withContext(unzipLogFileIoContext) {
+        println("Unzip thread: ${Thread.currentThread().name}")
+        println("Begin to unzip file: ${zipFilePath}")
+        val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
+        Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
+        gzipFileInputStream.close()
+        println("Success to unzip: ${zipFilePath.toAbsolutePath()} to file: ${outputFilePath.toAbsolutePath()}")
     }
 
-    suspend fun collect(logPath: String, targetPath: String) = coroutineScope {
-        val resultFilePath = Path.of(targetPath)
+    private suspend fun downloadRemoteFile(remoteFileUrlString: String): Path? = coroutineScope {
+        println("Collect log thread: ${Thread.currentThread().name}")
         val randomFileName = UUID.randomUUID().toString().replace("-", "")
         val downloadPath = Path.of(TMP_FOLDER, randomFileName)
-
-        launch {
-            val isDownloadDone = async(collectLogFileContext) {
-                val remoteLogFileInputStream = try {
-                    val remoteLogUrl = URL(logPath)
-                    remoteLogUrl.openStream()
-                } catch (e: IOException) {
-                    println("Fail to open remote log file input stream: ${logPath} because of exception.")
-                    e.printStackTrace()
-                    return@async true
-                }
-                try {
-                    println("Begin to download file: ${logPath}")
-                    Files.copy(remoteLogFileInputStream, downloadPath, StandardCopyOption.REPLACE_EXISTING)
-                    println("Success to download file: ${logPath}")
-                    return@async true
-                } catch (e: Exception) {
-                    println("Fail to download remote log file: ${logPath} because of exception.")
-                    e.printStackTrace()
-                    return@async true
-                } finally {
-                    remoteLogFileInputStream.close()
-                }
+        val remoteLogFileInputStream = try {
+            val remoteFileUrl = URL(remoteFileUrlString)
+            remoteFileUrl.openStream()
+        } catch (e: IOException) {
+            println("Fail to open remote log file input stream: ${remoteFileUrlString} because of exception.")
+            e.printStackTrace()
+            return@coroutineScope null
+        }
+        try {
+            println("Begin to download file: ${remoteFileUrlString}")
+            val downloadResult = async(collectRemoteFileIoContext) {
+                Files.copy(remoteLogFileInputStream, downloadPath, StandardCopyOption.REPLACE_EXISTING)
+                return@async downloadPath
             }
-            if (isDownloadDone.await()) {
-                this@LogCollector.unzip(downloadPath, resultFilePath)
-            }
+            println("Success to download file: ${remoteFileUrlString}")
+            return@coroutineScope downloadResult.await()
+        } catch (e: Exception) {
+            println("Fail to download remote log file: ${remoteFileUrlString} because of exception.")
+            e.printStackTrace()
+            return@coroutineScope null
+        } finally {
+            remoteLogFileInputStream.close()
         }
     }
 
-    suspend fun collectComponentLog(dataCenter: DataCenter, component: Component,
-                                    stack: AppStack = AppStack.A, date: Date, targetBaseFolderPath: String,
-                                    indexRange: IntRange = 1..4) {
+    suspend fun collectLog(dataCenter: DataCenter, logFileCategory: LogFileCategory,
+                           stack: AppStack = AppStack.A, date: Date, targetBaseFolderPath: String,
+                           indexRange: IntRange = 1..4) = withContext(collectRemoteFileIoContext) {
         val dataFormat = SimpleDateFormat("yyyy-MM-dd")
         val dataSuffix = dataFormat.format(date)
-        val targetFolderPath = Path.of(targetBaseFolderPath, dataCenter.id, component.id)
+        val targetFolderPath = Path.of(targetBaseFolderPath, dataCenter.id, logFileCategory.id)
         if (!targetFolderPath.toFile().exists()) {
             targetFolderPath.toFile().mkdirs()
         }
         indexRange.forEach {
             val appIndex = String.format("%02d", it)
-            component.logFiles.forEach { logFileName ->
-                collect(
-                        "$LOG_SERVER_BASE_URL/${dataCenter.id}/${component.id}/${dataCenter.shortName}prod/" +
-                                "${dataCenter.shortName}-${component.serverName}${appIndex}${stack.id}/${logFileName}.${dataSuffix}.gz",
-                        Path.of(targetFolderPath.toString(),
-                                "${logFileName}.${dataSuffix}.${component.serverName}${appIndex}.log")
-                                .toString())
+            val downloadFilePath = downloadRemoteFile(
+                    "$LOG_SERVER_BASE_URL/${dataCenter.id}/${logFileCategory.id}/${dataCenter.shortName}prod/" +
+                            "${dataCenter.shortName}-${logFileCategory.serverName}${appIndex}${stack.id}/${logFileCategory.logFile}.${dataSuffix}.gz")
+            val unzipFileResultPath = Path.of(targetFolderPath.toString(),
+                    "${logFileCategory.logFile}.${dataSuffix}.${logFileCategory.serverName}${appIndex}.log")
+            if (downloadFilePath == null) {
+                return@forEach
             }
+            unzip(downloadFilePath, unzipFileResultPath)
         }
     }
 }

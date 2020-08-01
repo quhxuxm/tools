@@ -1,9 +1,10 @@
 package com.quhxuxm.quh.tools.entry
 
 import com.quhxuxm.quh.tools.log.collector.AppStack
-import com.quhxuxm.quh.tools.log.collector.Component
 import com.quhxuxm.quh.tools.log.collector.DataCenter
 import com.quhxuxm.quh.tools.log.collector.LogCollector
+import com.quhxuxm.quh.tools.log.collector.LogFileCategory
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
@@ -21,36 +22,92 @@ fun main() {
 //    val date4 = calendar.time
 //    calendar.set(2020, Calendar.JULY, 23)
 //    val date5 = calendar.time
-    val dateToDownload = listOf(date1, date2)
+    val dateToDownload = listOf(date1)
     runBlocking {
         dateToDownload.forEach { date ->
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.RGS_PLATFORM_TOMCAT,
-                    date = date,
-                    targetBaseFolderPath = targetBaseFolderPath
-            )
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.GSR,
-                    date = date,
-                    stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath
-            )
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.PAS,
-                    date = date,
-                    stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath
-            )
-            LogCollector.collectComponentLog(
-                    dataCenter = dataCenter,
-                    component = Component.TS,
-                    date = date,
-                    stack = AppStack.NONE,
-                    targetBaseFolderPath = targetBaseFolderPath
-            )
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_ACCESS_LOG,
+                        stack = AppStack.NONE,
+                        date = date,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_LOG,
+                        stack = AppStack.NONE,
+                        date = date,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.GSR_TOMCAT_PERFORMANCE_LOG,
+                        date = date,
+                        stack = AppStack.NONE,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.GSR_APACHE_GSR_ACCESS_LOG,
+                        date = date,
+                        stack = AppStack.A,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.RGS_PLATFORM_TOMCAT_PLATFORM_ACCESS_LOG,
+                        date = date,
+                        stack = AppStack.A,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.RGS_PLATFORM_TOMCAT_PLATFORM_LOG,
+                        date = date,
+                        stack = AppStack.A,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.NSS_TOMCAT_NSS_LOG,
+                        date = date,
+                        stack = AppStack.NONE,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.NSS_TOMCAT_NSS_ACCESS_LOG,
+                        date = date,
+                        stack = AppStack.NONE,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
+            launch {
+                LogCollector.collectLog(
+                        dataCenter = dataCenter,
+                        logFileCategory = LogFileCategory.NSS_TOMCAT_HOSTED_WS_LOG,
+                        date = date,
+                        stack = AppStack.NONE,
+                        targetBaseFolderPath = targetBaseFolderPath
+                )
+            }
         }
     }
 }

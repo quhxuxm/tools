@@ -25,34 +25,34 @@ fun main() {
     val dateToDownload = listOf(date1)
     runBlocking {
         dateToDownload.forEach { date ->
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_ACCESS_LOG,
-                        stack = AppStack.NONE,
-                        date = date,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
+//            launch {
+//                LogCollector.collectLog(
+//                        dataCenter = dataCenter,
+//                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_ACCESS_LOG,
+//                        stack = AppStack.NONE,
+//                        date = date,
+//                        targetBaseFolderPath = targetBaseFolderPath
+//                )
+//            }
 
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_LOG,
-                        stack = AppStack.NONE,
-                        date = date,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.GSR_TOMCAT_PERFORMANCE_LOG,
-                        date = date,
-                        stack = AppStack.NONE,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
+//            launch {
+//                LogCollector.collectLog(
+//                        dataCenter = dataCenter,
+//                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_LOG,
+//                        stack = AppStack.NONE,
+//                        date = date,
+//                        targetBaseFolderPath = targetBaseFolderPath
+//                )
+//            }
+//            launch {
+//                LogCollector.collectLog(
+//                        dataCenter = dataCenter,
+//                        logFileCategory = LogFileCategory.GSR_TOMCAT_PERFORMANCE_LOG,
+//                        date = date,
+//                        stack = AppStack.NONE,
+//                        targetBaseFolderPath = targetBaseFolderPath
+//                )
+//            }
 
             launch {
                 LogCollector.collectLog(

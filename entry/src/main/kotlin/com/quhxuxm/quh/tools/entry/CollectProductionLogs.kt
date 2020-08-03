@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 private val logger = LoggerFactory.getLogger("MAIN")
-fun main() {
+fun main() = runBlocking {
     val dataCenter = DataCenter.GIB
     val targetBaseFolderPath = "D:\\logs\\IIM-73824"
     val calendar = Calendar.getInstance();
@@ -25,10 +25,8 @@ fun main() {
 //    calendar.set(2020, Calendar.JULY, 23)
 //    val date5 = calendar.time
     val dateToDownload = listOf(date1)
-    runBlocking {
-        dateToDownload.forEach { date ->
-            logger.info("Collecting logs for data: {}", date)
-//            launch {
+    dateToDownload.forEach { date ->
+        logger.info("Collecting logs for data: {}", date)
 //                LogCollector.collectLog(
 //                        dataCenter = dataCenter,
 //                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_ACCESS_LOG,
@@ -36,8 +34,6 @@ fun main() {
 //                        date = date,
 //                        targetBaseFolderPath = targetBaseFolderPath
 //                )
-//            }
-//            launch {
 //                LogCollector.collectLog(
 //                        dataCenter = dataCenter,
 //                        logFileCategory = LogFileCategory.GSR_TOMCAT_GSR_LOG,
@@ -45,8 +41,6 @@ fun main() {
 //                        date = date,
 //                        targetBaseFolderPath = targetBaseFolderPath
 //                )
-//            }
-//            launch {
 //                LogCollector.collectLog(
 //                        dataCenter = dataCenter,
 //                        logFileCategory = LogFileCategory.GSR_TOMCAT_PERFORMANCE_LOG,
@@ -54,61 +48,59 @@ fun main() {
 //                        stack = AppStack.NONE,
 //                        targetBaseFolderPath = targetBaseFolderPath
 //                )
-//            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.GSR_APACHE_GSR_ACCESS_LOG,
-                        date = date,
-                        stack = AppStack.A,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.RGS_PLATFORM_TOMCAT_PLATFORM_ACCESS_LOG,
-                        date = date,
-                        stack = AppStack.A,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.RGS_PLATFORM_TOMCAT_PLATFORM_LOG,
-                        date = date,
-                        stack = AppStack.A,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.NSS_TOMCAT_NSS_LOG,
-                        date = date,
-                        stack = AppStack.NONE,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.NSS_TOMCAT_NSS_ACCESS_LOG,
-                        date = date,
-                        stack = AppStack.NONE,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
-            launch {
-                LogCollector.collectLog(
-                        dataCenter = dataCenter,
-                        logFileCategory = LogFileCategory.NSS_TOMCAT_HOSTED_WS_LOG,
-                        date = date,
-                        stack = AppStack.NONE,
-                        targetBaseFolderPath = targetBaseFolderPath
-                )
-            }
+        launch {
+            LogCollector.collectLog(
+                    dataCenter = dataCenter,
+                    logFileCategory = LogFileCategory.GSR_APACHE_GSR_ACCESS_LOG,
+                    date = date,
+                    stack = AppStack.A,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+        }
+        launch {
+            LogCollector.collectLog(
+                    dataCenter = dataCenter,
+                    logFileCategory = LogFileCategory.RGS_PLATFORM_TOMCAT_PLATFORM_ACCESS_LOG,
+                    date = date,
+                    stack = AppStack.A,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+        }
+        launch {
+            LogCollector.collectLog(
+                    dataCenter = dataCenter,
+                    logFileCategory = LogFileCategory.RGS_PLATFORM_TOMCAT_PLATFORM_LOG,
+                    date = date,
+                    stack = AppStack.A,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+        }
+        launch {
+            LogCollector.collectLog(
+                    dataCenter = dataCenter,
+                    logFileCategory = LogFileCategory.NSS_TOMCAT_NSS_LOG,
+                    date = date,
+                    stack = AppStack.NONE,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+        }
+        launch {
+            LogCollector.collectLog(
+                    dataCenter = dataCenter,
+                    logFileCategory = LogFileCategory.NSS_TOMCAT_NSS_ACCESS_LOG,
+                    date = date,
+                    stack = AppStack.NONE,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
+        }
+        launch {
+            LogCollector.collectLog(
+                    dataCenter = dataCenter,
+                    logFileCategory = LogFileCategory.NSS_TOMCAT_HOSTED_WS_LOG,
+                    date = date,
+                    stack = AppStack.NONE,
+                    targetBaseFolderPath = targetBaseFolderPath
+            )
         }
     }
 }

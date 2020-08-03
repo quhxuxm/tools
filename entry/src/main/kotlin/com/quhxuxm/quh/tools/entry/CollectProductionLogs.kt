@@ -6,8 +6,10 @@ import com.quhxuxm.quh.tools.log.collector.LogCollector
 import com.quhxuxm.quh.tools.log.collector.LogFileCategory
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 import java.util.*
 
+private val logger = LoggerFactory.getLogger("MAIN")
 fun main() {
     val dataCenter = DataCenter.GIB
     val targetBaseFolderPath = "D:\\logs\\IIM-73824"
@@ -25,6 +27,7 @@ fun main() {
     val dateToDownload = listOf(date1)
     runBlocking {
         dateToDownload.forEach { date ->
+            logger.info("Collecting logs for data: {}", date)
 //            launch {
 //                LogCollector.collectLog(
 //                        dataCenter = dataCenter,
@@ -34,7 +37,6 @@ fun main() {
 //                        targetBaseFolderPath = targetBaseFolderPath
 //                )
 //            }
-
 //            launch {
 //                LogCollector.collectLog(
 //                        dataCenter = dataCenter,
@@ -53,7 +55,6 @@ fun main() {
 //                        targetBaseFolderPath = targetBaseFolderPath
 //                )
 //            }
-
             launch {
                 LogCollector.collectLog(
                         dataCenter = dataCenter,

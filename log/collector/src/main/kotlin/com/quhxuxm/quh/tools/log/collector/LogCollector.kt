@@ -3,6 +3,7 @@ package com.quhxuxm.quh.tools.log.collector
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import java.io.FileInputStream
 import java.io.IOException
 import java.net.URL
@@ -19,6 +20,7 @@ object LogCollector {
     private const val LOG_SERVER_BASE_URL = "http://sf-prod-arch01.corp.wagerworks.com/archives"
     private val collectRemoteFileIoContext = Executors.newFixedThreadPool(20).asCoroutineDispatcher()
     private val unzipLogFileIoContext = Executors.newFixedThreadPool(20).asCoroutineDispatcher()
+    private val logger = LoggerFactory.getLogger(LogCollector::class.java)
 
     init {
         val tmpFolderPath = Path.of(TMP_FOLDER)
@@ -30,14 +32,13 @@ object LogCollector {
     private suspend fun unzip(zipFilePath: Path, outputFilePath: Path): Boolean = coroutineScope {
         var success = false;
         launch(unzipLogFileIoContext) {
-            println("Unzip thread: ${Thread.currentThread().name}")
-            println("Begin to unzip file: ${zipFilePath}")
+            logger.info("Begin to unzip file: {}", zipFilePath)
             val gzipFileInputStream = GZIPInputStream(FileInputStream(zipFilePath.toFile()))
             Files.copy(gzipFileInputStream, outputFilePath, StandardCopyOption.REPLACE_EXISTING)
             gzipFileInputStream.close()
             Files.delete(zipFilePath)
             success = true
-            println("Success to unzip: ${zipFilePath.toAbsolutePath()} to file: ${outputFilePath.toAbsolutePath()}")
+            logger.info("Success to unzip: {} to file: {}", zipFilePath, outputFilePath)
         }
         return@coroutineScope success
     }
@@ -45,23 +46,22 @@ object LogCollector {
     private suspend fun downloadRemoteFile(remoteFileUrlString: String, downloadPath: Path): Boolean = coroutineScope {
         var success = false
         launch(collectRemoteFileIoContext) {
-            println("Collect log thread: ${Thread.currentThread().name}")
+            logger.info("Begin to download file: {}", remoteFileUrlString)
             val remoteLogFileInputStream = try {
                 val remoteFileUrl = URL(remoteFileUrlString)
                 remoteFileUrl.openStream()
             } catch (e: IOException) {
-                println("Fail to open remote log file input stream: ${remoteFileUrlString} because of exception.")
+                logger.error("Fail to open remote log file input stream: {}", remoteFileUrlString, e)
                 e.printStackTrace()
                 return@launch
             }
             try {
-                println("Begin to download file: ${remoteFileUrlString}")
                 Files.copy(remoteLogFileInputStream, downloadPath, StandardCopyOption.REPLACE_EXISTING)
-                println("Success to download file: ${remoteFileUrlString}")
+                logger.info("Success to download file: {}", remoteFileUrlString)
                 success = true
                 return@launch
             } catch (e: Exception) {
-                println("Fail to download remote log file: ${remoteFileUrlString} because of exception.")
+                logger.error("Fail to download remote log file: {}", remoteFileUrlString, e)
                 e.printStackTrace()
                 return@launch
             } finally {

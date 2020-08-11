@@ -81,6 +81,11 @@ object LogCollector {
             val unzipFileResultPath = Path.of(targetFolderPath.toString(), finalFileName)
 
             coroutineScope {
+                if (unzipFileResultPath.toFile().exists()) {
+                    logger.info("Unzip already: $unzipFileResultPath")
+                    result.add(unzipFileResultPath)
+                    return@coroutineScope
+                }
                 val downloadZipFilePath = Path.of(TMP_FOLDER, downloadZipFileName)
                 val downloadInfoDeferred = async(collectRemoteFileIoContext) {
                     val remoteFileUrlString =

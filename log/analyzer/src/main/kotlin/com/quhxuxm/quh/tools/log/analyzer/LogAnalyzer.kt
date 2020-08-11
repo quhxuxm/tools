@@ -17,11 +17,9 @@ class LogItem {
 
 object LogAnalyzer {
     private val logger = LoggerFactory.getLogger(LogAnalyzer::class.java)
-
-    private fun parseLog4JLine(logLine: String, previousLogItem: LogItem): LogItem {
-        val logLineParts = logLine.split(" ")
-    }
-
+//    private fun parseLog4JLine(logLine: String, previousLogItem: LogItem): LogItem {
+//        val logLineParts = logLine.split(" ")
+//    }
     suspend fun analyze(date: Date, dataCenter: DataCenter, stack: AppStack, logDownloadPath: Path) {
         val readyLogs = HashMap<LogFileCategory, Set<Path>>()
         coroutineScope {
